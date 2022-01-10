@@ -74,11 +74,10 @@ URY  Uruguay
 USA  Estados Unidos de America (los)
 """
 
-country_iso = "ISR"
+country_iso = "ARG"
 country_data = df[df["iso_code"] == country_iso]
 country_name = pycountry.countries.get(alpha_3=country_iso).name
 
-#columnas a leer, hay más abajode todo
 date = country_data["date"]
 cases = country_data["new_cases"]
 deaths = country_data["new_deaths"]
@@ -94,6 +93,7 @@ total_cases = country_data["total_cases"]
 total_deaths = country_data["total_deaths"]
 total_vaccinations = country_data["total_vaccinations"]
 full_vax_100 = country_data["people_fully_vaccinated_per_hundred"]
+population = country_data.iloc[-1]["population"]
 
 
 # Configuraciones generales para todos los gráficos
@@ -111,6 +111,49 @@ seaborn-darkgrid
 seaborn-deep
 seaborn-paper
 
+
+Lista de colores: https://matplotlib.org/stable/gallery/color/named_colors.html
+
+b: blue
+g: green
+r: red
+c: cyan
+m: magenta
+y: yellow
+k: black
+w: white
+
+grey
+brown
+indianred
+red
+salmon
+darkorange
+orange
+gold
+khaki
+olive
+yellow
+lawngreen
+sage
+palegreen
+lightgreen
+green
+aquamarine
+turquoise
+teal
+cyan
+dodgerblue
+slategrey
+royalblue
+navy
+blue
+indigo
+violet
+magenta
+orchid
+crimson
+pink
 """
 style_plot = "fivethirtyeight"  # confgura el tema visual del plot
 
@@ -385,13 +428,22 @@ mensaje = (
     + ultima_fecha.strftime("%d/%m/%Y")
     + " (Datos de OWID): \nCasos: "
     + str(total_contagios)
+    + " ("
+    + str(round(100 * total_contagios / population, 2))
+    + " % pobl.)"
     + "\nMuertes: "
     + str(total_muertos)
+    + " ("
+    + str(round(100 * total_muertos / population, 2))
+    + " % pobl.)"
     + "\nPersonas completamente vacunadas (cada 100): "
     + str(total_dosis)
 )
 
 # Tweet with multiple images
+
+print('Se publicó el siguiente tweet: ',mensaje)
+
 api.update_status(status=mensaje, media_ids=media_ids)
 
 """
