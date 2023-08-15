@@ -1,32 +1,30 @@
 """
-
 Los datos se descargan de
 https://covid.ourworldindata.org/data/owid-covid-data.csv
-
-Tienen actualización diaria en la mayoría de los casos
-
 """
 
 import pandas as pd  # Pandas
 import numpy as np  # numpy para cuentas
 import matplotlib.pyplot as plt  # para graficar
 from scipy.signal import argrelextrema  # para encontrar los máximos y mínimos
-from sklearn.linear_model import LinearRegression  # para hacer regresion lineal
 import requests  # para descargar la base de datos
 import sys  # me permite tener a mano una forma de cortar el script cuando lo estoy probando, como si fueran secciones con 'sys.exit()'
 import pycountry  # Convierte los códigos de paises en nombres y otras cosas
 from tqdm import tqdm  # permite monitorear la descarga del archivo
+from datetime import datetime
+import tweepy
 
+country_iso = "ARG"
+API_Key = "Your_API_Key"
+API_Key_Secret = "Your_API_Secret_Key"
+Access_Token = "Your_Access_Token"
+Access_Token_Secret = "Your_Access_Token_Secret"
 
-def get_data(
-    url="https://covid.ourworldindata.org/data/owid-covid-data.csv",
-    outfile="owid-covid.csv",
-):
-
-    # Streaming, so we can iterate over the response.
+# Function to download data from the provided URL
+def get_data(url="https://covid.ourworldindata.org/data/owid-covid-data.csv", outfile="owid-covid.csv"):
     response = requests.get(url, stream=True)
     total_size_in_bytes = int(response.headers.get("content-length", 0))
-    block_size = 1024  # 1 Kibibyte
+    block_size = 1024
     progress_bar = tqdm(total=total_size_in_bytes, unit="iB", unit_scale=True)
     with open(outfile, "wb") as file:
         for data in response.iter_content(block_size):
@@ -37,9 +35,7 @@ def get_data(
         print("ERROR, something went wrong")
         sys.exit()
 
-
-# dESCARGA EL ARCHIVO DE owid
-
+# Download the COVID-19 dataset
 get_data()
 
 # Lo guarda en un csv
@@ -73,8 +69,6 @@ SWE  Suecia
 URY  Uruguay
 USA  Estados Unidos de America (los)
 """
-
-country_iso = "ARG"
 country_data = df[df["iso_code"] == country_iso]
 country_name = pycountry.countries.get(alpha_3=country_iso).name
 
@@ -98,103 +92,31 @@ population = country_data.iloc[-1]["population"]
 
 # Configuraciones generales para todos los gráficos
 
-"""
-Estilos disponibles (muchos!)
-bmh
-classic
-fivethirtyeight
-ggplot
-grayscale
-seaborn-bright
-seaborn-colorblind
-seaborn-darkgrid
-seaborn-deep
-seaborn-paper
-
-
-Lista de colores: https://matplotlib.org/stable/gallery/color/named_colors.html
-
-b: blue
-g: green
-r: red
-c: cyan
-m: magenta
-y: yellow
-k: black
-w: white
-
-grey
-brown
-indianred
-red
-salmon
-darkorange
-orange
-gold
-khaki
-olive
-yellow
-lawngreen
-sage
-palegreen
-lightgreen
-green
-aquamarine
-turquoise
-teal
-cyan
-dodgerblue
-slategrey
-royalblue
-navy
-blue
-indigo
-violet
-magenta
-orchid
-crimson
-pink
-"""
 style_plot = "fivethirtyeight"  # confgura el tema visual del plot
+cmap = "viridis"  # configura el mapa de color
 
 """
-Mapas de color disponibles
-El predeterminado es 'jet' y es bastante malo porque tiene una escala de múltiples colores en vez de una escala continua de un color a otro
-
+Estilos disponibles (muchos!): bmh, classic, fivethirtyeight ...
+Lista de colores: https://matplotlib.org/stable/gallery/color/named_colors.html
+Mapas de color disponibles: 
 ('Perceptually Uniform Sequential', [
             'viridis', 'plasma', 'inferno', 'magma', 'cividis']),
-
 ('Sequential', [
             'Greys', 'Purples', 'Blues', 'Greens', 'Oranges', 'Reds',
             'YlOrBr', 'YlOrRd', 'OrRd', 'PuRd', 'RdPu', 'BuPu',
             'GnBu', 'PuBu', 'YlGnBu', 'PuBuGn', 'BuGn', 'YlGn']),
-
-'Sequential (2)', [
-            'binary', 'gist_yarg', 'gist_gray', 'gray', 'bone', 'pink',
-            'spring', 'summer', 'autumn', 'winter', 'cool', 'Wistia',
-            'hot', 'afmhot', 'gist_heat', 'copper']),
-
-'Diverging', [
-            'PiYG', 'PRGn', 'BrBG', 'PuOr', 'RdGy', 'RdBu',
-            'RdYlBu', 'RdYlGn', 'Spectral', 'coolwarm', 'bwr', 'seismic']),
-
 """
-
-cmap = "viridis"  # configura el mapa de color
 
 """
 Este es el gráfico más importante, me parece. No lo voy a condicionar para que siempre se genere.
-
-
 Una figura con 4 gráficos
 
 Casos Diarios + Suavizado           |       Muertes diarias + Suavizado
-
 Vacunaciones Diarias + Suavizado    |       Tests Diarios + Suavizado
-
 """
 
 graficos_principales = True
+casos_superpuestos = True
 
 if graficos_principales:
 
@@ -297,9 +219,6 @@ if graficos_principales:
 """
 Gráfico superpuesto de casos y muertes
 """
-
-casos_superpuestos = True
-
 if casos_superpuestos:
     with plt.style.context(style_plot):  # Casos nuevos y muertes nuevas suavizadas
         # crear la figura
@@ -387,22 +306,11 @@ if casos_superpuestos:
         plt.savefig("Muertes-y-dosis.png", dpi=150)
 
 
-from datetime import datetime
-
-# Tuitear los resultados
-
-import tweepy
-
-API_Key = "123123SADJASJKLASJKLJKLASDJKAS"
-API_Key_Secret = "12312312123434SADJASJKLASJKLJKLASDJKAS"
-Access_Token = "122SADJASJKLASJKLJKLASDJKAS"
-Access_Token_Secret = "XV5SADJASJKLASJKLJKLASDJKAS"
-
 # Authenticate to Twitter
 auth = tweepy.OAuthHandler(API_Key, API_Key_Secret)
 auth.set_access_token(Access_Token, Access_Token_Secret)
 
-# iniciar API
+# Initialize the API
 api = tweepy.API(auth, wait_on_rate_limit=True)
 
 images = [
